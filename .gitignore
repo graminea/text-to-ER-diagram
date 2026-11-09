@@ -63,5 +63,6 @@ Thumbs.db
 Desktop.ini
 
 # Local Codex configuration and state.
+/AGENTS.md
 .codex/
 .agents/
