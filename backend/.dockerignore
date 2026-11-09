@@ -1,0 +1,4 @@
+**
+!pyproject.toml
+!app/**/*.py
+!app/generations/adapters/roles/*.md
