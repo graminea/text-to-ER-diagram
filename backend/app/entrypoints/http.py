@@ -1,3 +1,4 @@
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -32,7 +33,15 @@ def create_app(
         with application.lifespan():
             yield
 
-    api = FastAPI(title="Text to ER", version="0.1.0", lifespan=lifespan)
+    local_docs = os.getenv("APP_ENV") == "development"
+    api = FastAPI(
+        title="Text to ER",
+        version="0.1.0",
+        lifespan=lifespan,
+        docs_url="/docs" if local_docs else None,
+        redoc_url="/redoc" if local_docs else None,
+        openapi_url="/openapi.json" if local_docs else None,
+    )
 
     @api.get("/api/health")
     def health() -> dict[str, str | None]:

@@ -102,6 +102,22 @@ def test_injected_llm_health(tmp_path: Path) -> None:
         assert "private-key" not in response.text
 
 
+@pytest.mark.parametrize(
+    ("environment", "docs_status"), [(None, 404), ("production", 404), ("development", 200)],
+)
+def test_api_docs_are_enabled_only_in_development(
+    tmp_path: Path, monkeypatch, environment: str | None, docs_status: int,
+) -> None:
+    if environment is None:
+        monkeypatch.delenv("APP_ENV", raising=False)
+    else:
+        monkeypatch.setenv("APP_ENV", environment)
+    with TestClient(create_app(tmp_path / "docs.db", FixtureGenerator())) as client:
+        for path in ("/docs", "/redoc", "/openapi.json"):
+            assert client.get(path).status_code == docs_status
+        assert client.get("/api/health").status_code == 200
+
+
 def test_asgi_entry_point_and_legacy_factory(monkeypatch) -> None:
     completion = Mock()
     monkeypatch.setattr("app.llm_provider.load_completion", lambda: completion)
