@@ -6,7 +6,7 @@ import { DiagramView } from "./DiagramView";
 import { AppearanceExplorer, useAppearance } from "./appearance";
 import type { Generation, Health } from "./types";
 
-const demo =
+const exampleRequirements =
   "Um cliente pode fazer vários pedidos. Cada pedido pertence a exatamente um cliente.";
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`/api${path}`, options);
@@ -34,7 +34,7 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
 }
 function App() {
   const { appearance, setAppearance, style } = useAppearance();
-  const [requirements, setRequirements] = useState(demo);
+  const [requirements, setRequirements] = useState(exampleRequirements);
   const [result, setResult] = useState<Generation | null>(null);
   const [history, setHistory] = useState<Generation[]>([]);
   const [busy, setBusy] = useState(false);
@@ -81,7 +81,6 @@ function App() {
           Text to ER
         </a>
         <div className="header-actions">
-          <span className="mode">{health ? (health.mode === "mock" ? "Offline" : "LLM direta") : "Conectando…"}</span>
           <AppearanceExplorer
             appearance={appearance}
             setAppearance={setAppearance}
@@ -101,7 +100,6 @@ function App() {
             spellCheck={false}
             onChange={(e) => setRequirements(e.target.value)}
             rows={9}
-            aria-describedby="mock-note"
           />
           <button
             className="primary"
@@ -110,13 +108,7 @@ function App() {
           >
             {busy ? "Gerando modelo…" : "Gerar diagrama"}
           </button>
-          <p id="mock-note" className="mock-note">
-            {health?.mode === "mock"
-              ? "Demonstração offline: gera apenas Cliente/Pedido, independentemente do texto."
-              : health?.mode === "llm"
-                ? `${health.model} — uma geração seguida de validação estrutural.`
-                : "Verificando o gerador disponível…"}
-          </p>
+          {health?.model && <p className="model-note">Modelo: {health.model}</p>}
           {error && (
             <p role="alert" className="error">
               {error}

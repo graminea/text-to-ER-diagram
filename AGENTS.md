@@ -6,7 +6,7 @@ Natural-language requirements to validated conceptual ER schemas.
 - `backend/app/er/models.py` defines the canonical Pydantic ER contract; `app.domain` re-exports it.
 - `generations/service.py` orchestrates provider → parse → deterministic validation → typed storage.
 - `generations/ports.py` defines injectable generator/storage boundaries; `providers.py` selects providers.
-- `generations/adapters/` isolates SQLite, the single-call LLM flow, prompts and the removable demo.
+- `generations/adapters/` isolates SQLite, the single-call LLM flow and prompts.
 - `entrypoints/http.py` owns HTTP mapping; `bootstrap.py` owns reusable assembly and lifecycle.
 - Legacy flat modules remain compatibility exports; `app.main:app` remains the ASGI entry point.
 - `backend/tests/test_dependencies.py` enforces import boundaries/cycles; see `docs/architecture.md`.
@@ -16,7 +16,7 @@ Natural-language requirements to validated conceptual ER schemas.
 - Never execute generated SQL. SQL export is outside this MVP.
 - Treat provider output as untrusted. No LLM calls inside HTTP routes.
 - Structural validity is not semantic correctness or human approval.
-- Preserve assumptions and ambiguities; never hide mock limitations.
+- Preserve assumptions and ambiguities.
 - Each relationship is binary. Recursive relationships need distinct role names.
 - No secrets in source or logs. Real provider usage is opt-in and outside required CI.
 

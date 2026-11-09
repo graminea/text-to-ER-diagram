@@ -3,8 +3,8 @@
 import pytest
 
 from app.generation import Generation, GenerationRequest, GenerationService, GenerationStore
-from app.offline import DEMO_REQUIREMENTS, MockGenerator
 from app.provider_contract import ProviderError
+from tests.support import EXAMPLE_REQUIREMENTS, FixtureGenerator, example_schema
 
 
 class MemoryStore:
@@ -25,13 +25,13 @@ class MemoryStore:
 
 def test_generate_and_retrieve_without_http_or_database() -> None:
     store: GenerationStore = MemoryStore()
-    service = GenerationService(MockGenerator(), store)
+    service = GenerationService(FixtureGenerator(), store)
     assert service.list_recent() == []
     assert service.get("missing") is None
-    result = service.generate(GenerationRequest(requirements=DEMO_REQUIREMENTS))
+    result = service.generate(GenerationRequest(requirements=EXAMPLE_REQUIREMENTS))
     assert result.validation.valid
-    assert result.requirements == DEMO_REQUIREMENTS
-    assert result.provider == "mock-fixture-v1"
+    assert result.requirements == EXAMPLE_REQUIREMENTS
+    assert result.provider == "test-fixture"
     assert result.id and result.created_at
     assert result.total_latency_ms >= result.latency_ms
     assert service.get(result.id) == result
@@ -52,7 +52,7 @@ def test_rejected_generation_is_not_saved(failure: str) -> None:
 
     service = GenerationService(Generator(), MemoryStore())
     with pytest.raises(ProviderError) as caught:
-        service.generate(GenerationRequest(requirements=DEMO_REQUIREMENTS))
+        service.generate(GenerationRequest(requirements=EXAMPLE_REQUIREMENTS))
     expected = {"timeout": "timeout", "provider": "rate_limit"}.get(failure, "invalid_output")
     assert caught.value.code == expected
     assert "private-data" not in str(caught.value)
@@ -64,14 +64,14 @@ def test_structurally_invalid_generation_is_saved_with_report() -> None:
         name = "test"
 
         def generate(self, requirements: str) -> object:
-            raw = MockGenerator().generate(DEMO_REQUIREMENTS)
+            raw = example_schema()
             raw["relationships"][0]["participants"][0]["entity"] = "Missing"
             raw["assumptions"] = ["Preserved assumption"]
             raw["ambiguities"] = ["Preserved ambiguity"]
             return raw
 
     service = GenerationService(Generator(), MemoryStore())
-    result = service.generate(GenerationRequest(requirements=DEMO_REQUIREMENTS))
+    result = service.generate(GenerationRequest(requirements=EXAMPLE_REQUIREMENTS))
     assert not result.validation.valid
     assert {issue.code for issue in result.validation.issues} == {
         "unknown_entity", "unresolved_ambiguity",

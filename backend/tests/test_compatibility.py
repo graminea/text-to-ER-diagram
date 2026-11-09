@@ -20,12 +20,10 @@ import pytest
             "RuntimeMetadata", "ProviderOutput", "SchemaGenerator", "ProviderError",
         )),
         ("persistence", "generations.adapters.sqlite", ("GenerationRepository",)),
-        ("offline", "generations.adapters.offline", ("DEMO_REQUIREMENTS", "MockGenerator")),
         ("prompts", "generations.adapters.prompts", ("PROMPT_VERSION", "SYSTEM_PROMPT")),
         ("llm_provider", "generations.adapters.llm", (
             "Completion", "LLMGenerator", "load_completion", "output_schema", "translate_error",
         )),
-        ("main", "entrypoints.http", ("create_app",)),
     ],
 )
 def test_legacy_exports_share_identity(legacy: str, canonical: str, names: tuple[str, ...]) -> None:

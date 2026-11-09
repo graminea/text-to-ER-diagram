@@ -8,36 +8,20 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.domain import ConceptualSchema
+from app.entrypoints.http import create_app
 from app.llm_provider import LLMGenerator
-from app.main import create_app
-from app.offline import DEMO_REQUIREMENTS, MockGenerator
 from app.settings import Settings
+from tests.support import EXAMPLE_REQUIREMENTS, FixtureGenerator, example_schema, response
 
 
 def settings(**overrides):
-    return Settings(mode="llm", api_key="test-secret", **{"model": "openai/test", **overrides})
-
-
-def response(content=None, finish="stop", refusal=None, usage=True):
-    return SimpleNamespace(
-        choices=[
-            SimpleNamespace(
-                finish_reason=finish,
-                message=SimpleNamespace(
-                    content=content
-                    if content is not None
-                    else json.dumps(MockGenerator().generate(DEMO_REQUIREMENTS)),
-                    refusal=refusal,
-                ),
-            )
-        ],
-        usage=SimpleNamespace(prompt_tokens=120, completion_tokens=80) if usage else None,
-    )
+    return Settings(api_key="test-secret", **{"model": "openai/test", **overrides})
 
 
 @pytest.fixture(autouse=True)
 def isolated_environment(monkeypatch):
     for name in (
+        "MODE",
         "MODEL",
         "API_KEY",
         "TIMEOUT",
@@ -46,12 +30,11 @@ def isolated_environment(monkeypatch):
         "API_BASE",
     ):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("MODE", "mock")
 
 
 @pytest.mark.parametrize("model", ["openai/test", "gemini/test", "anthropic/test", "deepseek/test"])
 def test_single_call_contract_validation_and_history(tmp_path, model):
-    payload = MockGenerator().generate(DEMO_REQUIREMENTS)
+    payload = example_schema()
     # A different entity proves this is the adapter's result, not a fixture fallback.
     payload["entities"][0]["name"] = "Biblioteca"
     payload["relationships"][0]["participants"][0]["entity"] = "Biblioteca"
@@ -73,7 +56,7 @@ def test_single_call_contract_validation_and_history(tmp_path, model):
         assert "test-secret" not in result.text
         assert client.get("/api/health").json()["mode"] == "llm"
         assert "test-secret" not in client.get("/api/health").text
-    with TestClient(create_app(db, MockGenerator())) as client:
+    with TestClient(create_app(db, FixtureGenerator())) as client:
         assert client.get(f"/api/generations/{body['id']}").json() == body
     transport.assert_called_once()
     args = transport.call_args.kwargs
@@ -103,7 +86,7 @@ def test_single_call_contract_validation_and_history(tmp_path, model):
 def test_rejected_outputs_are_not_saved_or_retried(tmp_path, fake, code):
     transport = Mock(return_value=fake)
     with TestClient(create_app(tmp_path / "db", LLMGenerator(settings(), transport))) as client:
-        result = client.post("/api/generations", json={"requirements": DEMO_REQUIREMENTS})
+        result = client.post("/api/generations", json={"requirements": EXAMPLE_REQUIREMENTS})
         assert result.status_code == 502
         assert result.json()["detail"]["code"] == code
         assert "private refusal" not in result.text
@@ -125,7 +108,7 @@ def test_rejected_outputs_are_not_saved_or_retried(tmp_path, fake, code):
 def test_api_errors_are_sanitized_without_retry(tmp_path, exception_name, code, status, caplog):
     transport = Mock(side_effect=type(exception_name, (Exception,), {})("test-secret raw prompt"))
     with TestClient(create_app(tmp_path / "db", LLMGenerator(settings(), transport))) as client:
-        result = client.post("/api/generations", json={"requirements": DEMO_REQUIREMENTS})
+        result = client.post("/api/generations", json={"requirements": EXAMPLE_REQUIREMENTS})
         assert result.status_code == status
         assert result.json()["detail"]["code"] == code
         assert "test-secret" not in result.text + caplog.text
@@ -134,13 +117,13 @@ def test_api_errors_are_sanitized_without_retry(tmp_path, exception_name, code, 
 
 
 def test_static_issues_survive_and_missing_usage_is_unknown(tmp_path):
-    payload = MockGenerator().generate(DEMO_REQUIREMENTS)
+    payload = example_schema()
     payload["relationships"][0]["participants"][0]["entity"] = "Missing"
     adapter = LLMGenerator(
         settings(), Mock(return_value=response(json.dumps(payload), usage=False))
     )
     with TestClient(create_app(tmp_path / "db", adapter)) as client:
-        result = client.post("/api/generations", json={"requirements": DEMO_REQUIREMENTS}).json()
+        result = client.post("/api/generations", json={"requirements": EXAMPLE_REQUIREMENTS}).json()
         assert result["validation"]["valid"] is False
         assert result["validation"]["issues"][0]["code"] == "unknown_entity"
         assert result["input_tokens"] is None and result["output_tokens"] is None
@@ -151,7 +134,7 @@ def test_explicit_json_mode_and_custom_endpoint():
     transport = Mock(return_value=response())
     LLMGenerator(
         settings(output_mode="json_object", api_base="http://localhost:1234/v1"), transport
-    ).generate(DEMO_REQUIREMENTS)
+    ).generate(EXAMPLE_REQUIREMENTS)
     assert transport.call_args.kwargs["response_format"] == {"type": "json_object"}
     assert transport.call_args.kwargs["api_base"] == "http://localhost:1234/v1"
     assert "Contrato JSON" in transport.call_args.kwargs["messages"][0]["content"]
@@ -160,8 +143,8 @@ def test_explicit_json_mode_and_custom_endpoint():
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"mode": "unknown"},
-        {"mode": "llm"},
+        {"model": ""},
+        {"api_key": ""},
         {"timeout": float("nan")},
         {"timeout": -1},
         {"max_tokens": 0},
@@ -171,14 +154,21 @@ def test_explicit_json_mode_and_custom_endpoint():
 )
 def test_invalid_configuration_fails_explicitly(overrides):
     with pytest.raises(ValueError):
-        Settings(**overrides)
+        Settings(**{"model": "openai/test", "api_key": "test-only", **overrides})
 
 
-def test_real_mode_never_falls_back_and_configuration_does_not_leak(monkeypatch, tmp_path):
-    monkeypatch.setenv("MODE", "llm")
+def test_missing_provider_configuration_fails_at_startup(tmp_path):
     with pytest.raises(ValueError, match="MODEL"):
         create_app(tmp_path / "db")
     assert "test-secret" not in repr(settings())
+
+
+def test_legacy_mock_configuration_does_not_enable_real_calls(monkeypatch, tmp_path):
+    monkeypatch.setenv("MODE", "mock")
+    monkeypatch.setenv("MODEL", "openai/test")
+    monkeypatch.setenv("API_KEY", "test-only")
+    with pytest.raises(ValueError, match="Remova MODE"):
+        create_app(tmp_path / "db")
 
 
 def test_old_history_payload_remains_readable(tmp_path):
@@ -187,10 +177,10 @@ def test_old_history_payload_remains_readable(tmp_path):
     old = {
         "id": "old",
         "created_at": "2026-01-01",
-        "requirements": DEMO_REQUIREMENTS,
+        "requirements": EXAMPLE_REQUIREMENTS,
         "provider": "mock-fixture-v1",
         "latency_ms": 1.0,
-        "schema_model": MockGenerator().generate(DEMO_REQUIREMENTS),
+        "schema_model": example_schema(),
         "validation": {"valid": True, "issues": []},
     }
     result = Generation.model_validate(old)

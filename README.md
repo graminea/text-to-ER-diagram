@@ -1,49 +1,34 @@
 # Text to ER
 
-Transforma requisitos em português em um diagrama conceitual de entidades e relacionamentos. A aplicação mostra o diagrama, o JSON e o relatório de validação, além de guardar as últimas gerações em SQLite.
+Aplicação web que transforma requisitos em português em modelos conceituais de entidades e relacionamentos. Gere e visualize o diagrama, consulte o esquema em JSON e o relatório de validação, e acesse as gerações recentes salvas localmente em SQLite. Os resultados ajudam a iniciar a modelagem e devem ser revisados quanto à fidelidade aos requisitos.
 
 ![Demonstração do Text to ER](docs/demo.png)
 
-## Rodar a demonstração
+## Rodar a aplicação
 
 Pré-requisitos para estes comandos: Python 3.13 e Node.js 22. Na raiz do projeto:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -e ./backend
-npm --prefix frontend ci
-```
-
-No macOS ou Linux, ative o ambiente com `source .venv/bin/activate`.
-
-Em um terminal com o ambiente virtual ativo, inicie o backend:
-
-```powershell
-cd backend
-python -m uvicorn app.main:app --reload
-```
-Em outro terminal aberto na raiz, execute `npm --prefix frontend run dev`.
-
-Abra a [aplicação](http://127.0.0.1:5173) e clique em **Gerar diagrama**. O modo padrão usa um exemplo fixo de clientes e pedidos e funciona sem chave de API. Um cliente pode ter zero ou muitos pedidos, e cada pedido pertence a um único cliente. A [documentação interativa da API](http://127.0.0.1:8000/docs) também fica disponível.
-
-## Gerar a partir de requisitos próprios
-
-Com o ambiente virtual ativo, instale o suporte a LLM e prepare a configuração local. Se `backend/.env` já existir, edite o arquivo existente.
-
-```powershell
 python -m pip install -e './backend[llm]'
-Copy-Item backend/.env.example backend/.env
+npm --prefix frontend ci
+if (-not (Test-Path backend/.env)) { Copy-Item backend/.env.example backend/.env }
 ```
 
-Em `backend/.env`, defina `MODE=llm`, `MODEL` com o prefixo do provedor (por exemplo, `openai/<modelo>` ou `gemini/<modelo>`) e `API_KEY`. A chave fica no backend. Reinicie o backend com:
+No macOS ou Linux, ative o ambiente com `source .venv/bin/activate`. Se `backend/.env` ainda não existir, crie-o com `cp backend/.env.example backend/.env`.
+
+Em `backend/.env`, defina `MODEL` com o prefixo do provedor (por exemplo, `openai/<modelo>` ou `gemini/<modelo>`) e `API_KEY`. Se o arquivo já existir, edite-o e remova a configuração antiga `MODE`. A chave fica no backend.
+
+Com o ambiente virtual ativo, inicie o backend:
 
 ```powershell
 cd backend
 python -m uvicorn app.main:app --env-file .env
 ```
+Em outro terminal aberto na raiz, execute `npm --prefix frontend run dev`.
 
-Confirme que a interface mostra **LLM direta**. Tente “Uma loja cadastra produtos. Cada produto pertence a uma categoria, e uma categoria pode agrupar vários produtos.” Compare o diagrama e as suposições com o texto original. As chamadas usam a cota do provedor. Use requisitos fictícios na demonstração, pois o histórico local guarda o texto enviado.
+Abra a [aplicação](http://127.0.0.1:5173), edite os requisitos e clique em **Gerar diagrama**. Compare o diagrama e as suposições com o texto original. As chamadas usam a cota do provedor, e o histórico local guarda o texto enviado. A [documentação interativa da API](http://127.0.0.1:8000/docs) também fica disponível.
 
 ## Como funciona
 
@@ -68,4 +53,4 @@ npm test
 npm run build
 ```
 
-A CI executa essas verificações sem credenciais. Para incluir os testes de transporte HTTP simulado do SDK, instale também o extra `llm`. Para verificar a aplicação no Chromium, rode `npx playwright install chromium` e `npm run test:e2e` em `frontend`, com o ambiente virtual ativo e as portas 5173 e 8000 livres.
+A CI executa essas verificações sem credenciais. Para incluir os testes de transporte HTTP simulado do SDK, instale também o extra `llm`. Para verificar a aplicação no Chromium, rode `npx playwright install chromium` e `npm run test:e2e` em `frontend`, com o ambiente virtual ativo e as portas 5173 e 8000 livres. Os testes de navegador usam um transporte simulado e um histórico separado.
