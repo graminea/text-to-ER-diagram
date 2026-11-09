@@ -104,8 +104,9 @@ function App() {
             rows={9}
           />
           <div className="generation-actions">
+            <label htmlFor="generation-flow">Tipo de geração</label>
             <select
-              aria-label="Modo de geração"
+              id="generation-flow"
               aria-describedby={flow === "B" ? "agent-token-note" : undefined}
               value={flow}
               disabled={busy}
