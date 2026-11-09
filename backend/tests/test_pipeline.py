@@ -32,6 +32,15 @@ def test_invalid_requirements(tmp_path: Path, requirements: object) -> None:
         assert client.get("/api/generations").json() == []
 
 
+def test_unknown_flow_is_rejected(tmp_path: Path) -> None:
+    with TestClient(create_app(tmp_path / "test.db", FixtureGenerator())) as client:
+        response = client.post(
+            "/api/generations", json={"requirements": EXAMPLE_REQUIREMENTS, "flow": "other"}
+        )
+        assert response.status_code == 422
+        assert response.json()["detail"][0]["loc"] == ["body", "flow"]
+
+
 def test_structural_issues_are_actionable() -> None:
     raw = example_schema()
     raw["entities"][1]["attributes"][0]["is_identifier"] = False

@@ -26,6 +26,10 @@ ALLOWED = {
     },
     "app.generations.adapters.sqlite": {"app.generations.models"},
     "app.generations.adapters.prompts": set(),
+    "app.generations.adapters.agents": {
+        "app.er.models", "app.generations.adapters.llm", "app.generations.adapters.prompts",
+        "app.generations.ports",
+    },
     "app.generations.adapters.llm": {
         "app.er.models", "app.generations.ports", "app.generations.adapters.prompts",
         "app.settings",
@@ -33,7 +37,7 @@ ALLOWED = {
     "app.settings": set(),
     "app.providers": {
         "app.generations.ports", "app.settings",
-        "app.generations.adapters.llm",
+        "app.generations.adapters.agents", "app.generations.adapters.llm",
     },
     "app.bootstrap": {
         "app.generations.service", "app.generations.ports", "app.generations.adapters.sqlite",
@@ -58,6 +62,7 @@ EXTERNAL = {
     "app.er.models": {"pydantic"},
     "app.generations.models": {"pydantic"},
     "app.generations.service": {"pydantic"},
+    "app.generations.adapters.agents": {"pydantic"},
     "app.generations.adapters.llm": {"litellm"},
     "app.entrypoints.http": {"fastapi"},
 }

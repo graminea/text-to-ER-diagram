@@ -11,8 +11,15 @@ from app.generations.ports import GenerationStore, ProviderError, ProviderOutput
 
 
 class GenerationService:
-    def __init__(self, generator: SchemaGenerator, repository: GenerationStore):
+    def __init__(
+        self,
+        generator: SchemaGenerator,
+        repository: GenerationStore,
+        *,
+        agent_generator: SchemaGenerator | None = None,
+    ):
         self.generator = generator
+        self.agent_generator = agent_generator
         self.repository = repository
 
     def list_recent(self) -> list[Generation]:
@@ -22,9 +29,12 @@ class GenerationService:
         return self.repository.get(generation_id)
 
     def generate(self, request: GenerationRequest) -> Generation:
+        generator = self.agent_generator if request.flow == "B" else self.generator
+        if generator is None:
+            raise ProviderError("unsupported")
         start = perf_counter()
         try:
-            raw = self.generator.generate(request.requirements)
+            raw = generator.generate(request.requirements)
             output = raw if isinstance(raw, ProviderOutput) else None
             content = output.content if output else raw
             schema = (
@@ -42,10 +52,11 @@ class GenerationService:
             id=str(uuid4()),
             created_at=datetime.now(UTC).isoformat(),
             requirements=request.requirements,
-            provider=self.generator.name,
+            provider=generator.name,
             latency_ms=round((perf_counter() - start) * 1000, 3),
             schema_model=schema,
             validation=validate_schema(schema),
+            flow=request.flow,
             model=output.model if output else None,
             prompt_version=output.prompt_version if output else None,
             output_mode=output.output_mode if output else None,
