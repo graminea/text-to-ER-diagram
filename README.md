@@ -1,46 +1,35 @@
 # Text to ER
 
-Aplicação web que transforma requisitos em português em modelos conceituais de entidades e relacionamentos. Gere e visualize o diagrama, consulte o esquema em JSON e o relatório de validação. 
+Aplicação web que transforma requisitos em português em diagramas conceituais de entidades e relacionamentos (ER).
+
+O projeto faz parte do meu TCC sobre o uso de LLMs para gerar e validar esquemas conceituais a partir de requisitos em linguagem natural.
 
 ![Demonstração do Text to ER](docs/demo.png)
 
-## Rodar a aplicação
+## Rodar com Docker Compose
 
-Pré-requisitos para estes comandos: Python 3.13 e Node.js 22. Na raiz do projeto:
+Com o Docker em execução, copie `backend/.env.example` para `backend/.env` se o arquivo ainda não existir. Preencha `MODEL` com o prefixo do provedor (por exemplo, `openai/<modelo>`) e `API_KEY`.
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e ./backend[llm]
-npm --prefix frontend ci
-if (-not (Test-Path backend/.env)) { Copy-Item backend/.env.example backend/.env }
+### Primeira execução
+
+Na raiz do repositório, construa as imagens e inicie a aplicação.
+
+```sh
+docker compose up --build --wait
 ```
 
-No macOS ou Linux, ative o ambiente com `source .venv/bin/activate`. Se `backend/.env` ainda não existir, crie-o com `cp backend/.env.example backend/.env`.
+Use a geração **Direta** ou **Com agentes** no [Text to ER](http://127.0.0.1:8080).
 
-Em `backend/.env`, defina `MODEL` com o prefixo do provedor (por exemplo, `openai/<modelo>` ou `gemini/<modelo>`) e `API_KEY`. Se o arquivo já existir, edite-o e remova a configuração antiga `MODE`. A chave fica no backend.
+### Desligar
 
-Com o ambiente virtual ativo, inicie o backend:
-
-```powershell
-cd backend
-python -m uvicorn app.main:app --env-file .env
+```sh
+docker compose down
 ```
-Em outro terminal aberto na raiz, execute `npm --prefix frontend run dev`.
 
-Abra a [aplicação](http://127.0.0.1:5173), edite os requisitos e escolha **Direta** ou **Com agentes** antes de clicar em **Gerar diagrama**
+O histórico de gerações do Docker é preservado.
 
-A validação estrutural não mede fidelidade ao requisito. O escopo é modelagem conceitual, com revisão humana das entidades e cardinalidades.
+### Rodar novamente
 
-## Verificações
-
-```powershell
-python -m pip install -e ./backend[dev]
-cd backend
-python -m pytest
-python -m ruff check .
-python -m mypy
-cd ../frontend
-npm test
-npm run build
+```sh
+docker compose up
 ```
