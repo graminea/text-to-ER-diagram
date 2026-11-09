@@ -14,7 +14,8 @@ body {
 }
 button,
 textarea,
-input {
+input,
+select {
   font: inherit;
 }
 button,
@@ -31,7 +32,8 @@ button:disabled {
 a:focus-visible,
 button:focus-visible,
 summary:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 2px solid var(--fg);
   outline-offset: 3px;
 }
@@ -142,8 +144,19 @@ p {
   font-weight: 500;
   padding: 11px 16px;
 }
-.editor-pane > .primary {
-  width: 100%;
+.generation-actions {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+}
+.generation-actions select {
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--fg);
+  background: var(--surface);
+  font-size: 12px;
 }
 .primary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--accent) 88%, var(--on-accent));
@@ -153,6 +166,9 @@ p {
   line-height: 1.7;
   color: var(--muted);
   margin-top: 15px;
+}
+.model-note span {
+  display: block;
 }
 .history {
   margin-top: 32px;
@@ -220,12 +236,25 @@ summary:hover {
   gap: 16px;
   padding: 0 28px;
 }
-.status {
+.validation-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
-.status.invalid {
+.validation-status.invalid {
   color: var(--fg);
+}
+.validation-status svg {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .canvas {
   position: relative;

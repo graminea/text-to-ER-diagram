@@ -28,11 +28,11 @@ python -m uvicorn app.main:app --env-file .env
 ```
 Em outro terminal aberto na raiz, execute `npm --prefix frontend run dev`.
 
-Abra a [aplicação](http://127.0.0.1:5173), edite os requisitos e clique em **Gerar diagrama**. Compare o diagrama e as suposições com o texto original. As chamadas usam a cota do provedor, e o histórico local guarda o texto enviado. A [documentação interativa da API](http://127.0.0.1:8000/docs) também fica disponível.
+Abra a [aplicação](http://127.0.0.1:5173), edite os requisitos e escolha **Direta** ou **Com agentes** antes de clicar em **Gerar diagrama**. Compare o diagrama e as suposições com o texto original. As chamadas usam a cota do provedor, e o histórico local guarda o texto enviado. A [documentação interativa da API](http://127.0.0.1:8000/docs) também fica disponível.
 
 ## Como funciona
 
-1. O FastAPI entrega o requisito ao serviço de geração. O adaptador LiteLLM faz uma chamada e solicita uma saída JSON estruturada.
+1. O FastAPI entrega o requisito ao serviço de geração. **Direta** faz uma chamada ao modelo. **Com agentes** usa um coordenador para rascunhar e finalizar o modelo, com duas revisões em paralelo para coerência e cardinalidade. As quatro chamadas tendem a usar mais tokens.
 2. O Pydantic verifica o formato. Regras em Python conferem identificadores, nomes duplicados e referências entre entidades. Saídas fora do contrato são rejeitadas. Esquemas legíveis com erros de integridade ficam disponíveis no histórico junto com o relatório.
 3. O React Flow renderiza o esquema. O resultado inclui suposições e ambiguidades para revisão humana.
 
