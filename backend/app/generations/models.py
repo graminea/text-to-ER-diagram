@@ -1,8 +1,18 @@
 from typing import Annotated, Literal
 
-from pydantic import StringConstraints
+from pydantic import Field, StringConstraints
 
 from app.er.models import ConceptualSchema, Contract, ValidationReport
+
+FindingList = Annotated[
+    list[Annotated[str, StringConstraints(min_length=1, max_length=600)]],
+    Field(max_length=8),
+]
+
+
+class SpecialistFindings(Contract):
+    consistency: FindingList
+    cardinality: FindingList
 
 
 class GenerationRequest(Contract):
@@ -28,3 +38,4 @@ class Generation(Contract):
     output_tokens: int | None = None
     call_count: int | None = None
     total_latency_ms: float | None = None
+    specialist_findings: SpecialistFindings | None = None

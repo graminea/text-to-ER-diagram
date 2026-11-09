@@ -46,7 +46,7 @@ def test_history_limit_order_and_legacy_payloads(tmp_path: Path) -> None:
             assert item["provider"] == "mock-fixture-v1"
             for field in (
                 "model", "prompt_version", "output_mode", "input_tokens",
-                "output_tokens", "call_count", "total_latency_ms",
+                "output_tokens", "call_count", "total_latency_ms", "specialist_findings",
             ):
                 assert item[field] is None
         assert client.get("/api/generations/generation-20").json() == history[0]

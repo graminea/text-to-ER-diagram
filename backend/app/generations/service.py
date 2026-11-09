@@ -64,6 +64,7 @@ class GenerationService:
             output_tokens=output.output_tokens if output else None,
             call_count=output.call_count if output else None,
             total_latency_ms=round((perf_counter() - start) * 1000, 3),
+            specialist_findings=output.specialist_findings if output else None,
         )
         # Structurally invalid, parseable results are retained with their issues.
         self.repository.save(result)

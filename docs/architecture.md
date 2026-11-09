@@ -27,3 +27,7 @@ O backend configura o provedor na inicialização. Falhas do provedor e resposta
 `POST /api/generations` aceita `flow: "A"` para a geração direta em uma chamada e `flow: "B"` para a geração com agentes. O padrão é `"A"`. O coordenador produz o rascunho, recebe os pareceres de coerência e cardinalidade em paralelo e finaliza o modelo. As quatro chamadas compartilham o prazo de `TIMEOUT`. Uma revisão inválida interrompe a geração. Os [papéis em Markdown](../backend/app/generations/adapters/roles/) são independentes da interface e podem ser reutilizados em outros ambientes.
 
 O núcleo ER independe de HTTP, do banco e do SDK. O serviço usa as interfaces em `ports.py`, e a composição liga essas interfaces aos adaptadores. Os [testes de dependências](../backend/tests/test_dependencies.py) verificam as fronteiras de importação. `app.main:app` e as reexportações antigas mantêm a compatibilidade com os pontos de entrada existentes.
+
+O log do servidor agrupa as chamadas de agentes por `run_id` e informa etapa, duração, tokens disponíveis e códigos de erro. O histórico guarda os achados dos especialistas sobre o rascunho em `specialist_findings`. Gerações diretas e registros antigos retornam `null` nesse campo.
+
+`APP_ENV=development` habilita `/docs`, `/redoc` e `/openapi.json` no ambiente local. Em produção, omita `APP_ENV` ou defina `APP_ENV=production` para manter essas rotas desabilitadas.

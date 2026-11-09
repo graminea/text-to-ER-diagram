@@ -24,6 +24,7 @@ export type Generation = {
   output_tokens?: number | null;
   call_count?: number | null;
   total_latency_ms?: number | null;
+  specialist_findings?: { consistency: string[]; cardinality: string[] } | null;
   id: string;
   created_at: string;
   requirements: string;
