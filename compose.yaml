@@ -15,7 +15,7 @@ services:
         - python
         - -c
         - "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/api/health', timeout=2).close()"
-      interval: 5s
+      interval: 30s
       timeout: 3s
       retries: 6
       start_period: 20s
@@ -33,7 +33,7 @@ services:
         - CMD-SHELL
         - wget -q -O /dev/null http://127.0.0.1:8080/ &&
           wget -q -O /dev/null http://127.0.0.1:8080/api/health
-      interval: 5s
+      interval: 30s
       timeout: 3s
       retries: 6
     stop_grace_period: 330s
