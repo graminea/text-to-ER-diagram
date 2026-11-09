@@ -14,6 +14,7 @@ export type ERSchema = {
   assumptions: string[];
   ambiguities: string[];
 };
+export type GenerationFlow = "A" | "B";
 export type Generation = {
   flow?: string;
   model?: string | null;

@@ -120,7 +120,9 @@ def test_selected_provider_declares_metadata(tmp_path: Path, monkeypatch) -> Non
     class CustomGenerator(FixtureGenerator):
         runtime_metadata = RuntimeMetadata("custom", "llm", "custom/model")
 
-    monkeypatch.setattr("app.bootstrap.create_generator", lambda settings: CustomGenerator())
+    monkeypatch.setattr(
+        "app.bootstrap.create_generators", lambda settings: (CustomGenerator(), FixtureGenerator())
+    )
     settings = Settings(model="openai/test", api_key="test-only")
     application = build_application(tmp_path / "selected.db", settings=settings)
     assert application.runtime_metadata == RuntimeMetadata("custom", "llm", "custom/model")

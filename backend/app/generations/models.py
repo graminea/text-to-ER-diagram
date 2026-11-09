@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import StringConstraints
 
@@ -9,6 +9,7 @@ class GenerationRequest(Contract):
     requirements: Annotated[
         str, StringConstraints(strip_whitespace=True, min_length=10, max_length=10000)
     ]
+    flow: Literal["A", "B"] = "A"
 
 
 class Generation(Contract):

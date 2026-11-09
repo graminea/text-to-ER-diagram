@@ -4,10 +4,11 @@ import "@xyflow/react/dist/style.css";
 import "./style.css";
 import { DiagramView } from "./DiagramView";
 import { AppearanceExplorer, useAppearance } from "./appearance";
-import type { Generation, Health } from "./types";
+import type { Generation, GenerationFlow, Health } from "./types";
 
 const exampleRequirements =
   "Um cliente pode fazer vários pedidos. Cada pedido pertence a exatamente um cliente.";
+const flowLabels = { A: "Direta", B: "Com agentes" };
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`/api${path}`, options);
   if (!response.ok) {
@@ -35,6 +36,7 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
 function App() {
   const { appearance, setAppearance, style } = useAppearance();
   const [requirements, setRequirements] = useState(exampleRequirements);
+  const [flow, setFlow] = useState<GenerationFlow>("A");
   const [result, setResult] = useState<Generation | null>(null);
   const [history, setHistory] = useState<Generation[]>([]);
   const [busy, setBusy] = useState(false);
@@ -64,7 +66,7 @@ function App() {
       const next = await api<Generation>("/generations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requirements }),
+        body: JSON.stringify({ requirements, flow }),
       });
       setResult(next);
       setHistory((current) => [next, ...current].slice(0, 20));
@@ -101,14 +103,33 @@ function App() {
             onChange={(e) => setRequirements(e.target.value)}
             rows={9}
           />
-          <button
-            className="primary"
-            disabled={busy || requirements.trim().length < 10}
-            onClick={generate}
-          >
-            {busy ? "Gerando modelo…" : "Gerar diagrama"}
-          </button>
-          {health?.model && <p className="model-note">Modelo: {health.model}</p>}
+          <div className="generation-actions">
+            <select
+              aria-label="Modo de geração"
+              aria-describedby={flow === "B" ? "agent-token-note" : undefined}
+              value={flow}
+              disabled={busy}
+              onChange={(e) => setFlow(e.target.value as GenerationFlow)}
+            >
+              <option value="A">{flowLabels.A}</option>
+              <option value="B">{flowLabels.B}</option>
+            </select>
+            <button
+              className="primary"
+              disabled={busy || requirements.trim().length < 10}
+              onClick={generate}
+            >
+              {busy ? "Gerando modelo…" : "Gerar diagrama"}
+            </button>
+          </div>
+          {(flow === "B" || health?.model) && (
+            <p className="model-note">
+              {flow === "B" && (
+                <span id="agent-token-note">Com agentes, a geração tende a usar mais tokens.</span>
+              )}
+              {health?.model && <span>Modelo: {health.model}</span>}
+            </p>
+          )}
           {error && (
             <p role="alert" className="error">
               {error}
@@ -150,8 +171,15 @@ function App() {
             <h2 id="model-heading">Modelo ER</h2>
             {result && (
               <span
-                className={`status ${result.validation.valid ? "" : "invalid"}`}
+                className={`validation-status ${result.validation.valid ? "" : "invalid"}`}
               >
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  {result.validation.valid ? (
+                    <path d="m3 8 3 3 7-7" />
+                  ) : (
+                    <path d="M8 2 15 14H1L8 2Zm0 4v3m0 2v.5" />
+                  )}
+                </svg>
                 {result.validation.valid
                   ? "Estrutura válida"
                   : "Requer correções"}
@@ -213,6 +241,8 @@ function App() {
                     <pre>{JSON.stringify(result.schema_model, null, 2)}</pre>
                   </details>
                   <p className="provider-info">
+                    {result.flow === "B" && `${flowLabels.B} / `}
+                    {result.flow === "A" && result.call_count === 1 && `${flowLabels.A} / `}
                     {result.provider}{result.model ? ` / ${result.model}` : ""} / {result.total_latency_ms ?? result.latency_ms} ms
                     {result.input_tokens != null && ` / ${result.input_tokens} tokens de entrada`}
                     {result.output_tokens != null && ` / ${result.output_tokens} tokens de saída`}

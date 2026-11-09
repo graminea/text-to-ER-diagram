@@ -9,7 +9,7 @@ from pathlib import Path
 from app.generations.adapters.sqlite import GenerationRepository
 from app.generations.ports import RuntimeMetadata, SchemaGenerator
 from app.generations.service import GenerationService
-from app.providers import create_generator
+from app.providers import create_generators
 from app.settings import Settings
 
 
@@ -32,6 +32,7 @@ def build_application(
     settings: Settings | None = None,
     *,
     runtime_metadata: RuntimeMetadata | None = None,
+    agent_generator: SchemaGenerator | None = None,
 ) -> Application:
     """Assemble without initializing storage; enter lifespan before calling services.
 
@@ -40,13 +41,15 @@ def build_application(
     Injected generators without metadata are reported as custom.
     """
     repository = GenerationRepository(db_path or Path(os.getenv("DB_PATH", "data/pilot.db")))
-    selected = (
-        generator if generator is not None else create_generator(settings or Settings.from_env())
-    )
+    if generator is None:
+        generator, default_agents = create_generators(settings or Settings.from_env())
+        if agent_generator is None:
+            agent_generator = default_agents
     if runtime_metadata is None:
-        declared = getattr(selected, "runtime_metadata", None)
+        declared = getattr(generator, "runtime_metadata", None)
         runtime_metadata = (
             declared if isinstance(declared, RuntimeMetadata)
-            else RuntimeMetadata(provider=selected.name, mode="custom")
+            else RuntimeMetadata(provider=generator.name, mode="custom")
         )
-    return Application(GenerationService(selected, repository), runtime_metadata, repository)
+    service = GenerationService(generator, repository, agent_generator=agent_generator)
+    return Application(service, runtime_metadata, repository)

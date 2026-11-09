@@ -18,9 +18,11 @@ def create_app(
     settings: Settings | None = None,
     *,
     runtime_metadata: RuntimeMetadata | None = None,
+    agent_generator: SchemaGenerator | None = None,
 ) -> FastAPI:
     application = build_application(
-        db_path, generator, settings, runtime_metadata=runtime_metadata
+        db_path, generator, settings,
+        runtime_metadata=runtime_metadata, agent_generator=agent_generator,
     )
     service = application.service
     metadata = application.runtime_metadata

@@ -1,4 +1,4 @@
-"""Single-call, multi-provider adapter. No agents, repairs, retries or fallbacks."""
+"""Single-call LiteLLM transport and direct ER generator."""
 
 import importlib
 import json
@@ -7,7 +7,7 @@ import os
 from collections.abc import Callable
 from typing import Any
 
-from app.er.models import ConceptualSchema
+from app.er.models import ConceptualSchema, Contract
 from app.generations.adapters.prompts import PROMPT_VERSION, SYSTEM_PROMPT
 from app.generations.ports import ProviderError, ProviderOutput, RuntimeMetadata
 from app.settings import Settings
@@ -16,9 +16,9 @@ Completion = Callable[..., Any]
 logger = logging.getLogger("app.llm_provider")
 
 
-def output_schema() -> dict[str, Any]:
+def output_schema(contract: type[Contract] = ConceptualSchema) -> dict[str, Any]:
     """Provider strict schemas require every property, including defaulted fields."""
-    schema = ConceptualSchema.model_json_schema()
+    schema = contract.model_json_schema()
 
     def visit(node: Any) -> None:
         if isinstance(node, dict):
@@ -83,11 +83,22 @@ class LLMGenerator:
         return RuntimeMetadata(provider=self.name, mode="llm", model=self.settings.model)
 
     def generate(self, requirements: str) -> ProviderOutput:
-        schema = output_schema()
+        return self.complete(requirements, instructions=SYSTEM_PROMPT)
+
+    def complete(
+        self,
+        user_input: str,
+        *,
+        instructions: str,
+        contract: type[Contract] = ConceptualSchema,
+        schema_name: str = "conceptual_er",
+        timeout: float | None = None,
+    ) -> ProviderOutput:
+        schema = output_schema(contract)
         response_format: dict[str, object] = {"type": self.settings.output_mode}
         if self.settings.output_mode == "json_schema":
             response_format["json_schema"] = {
-                "name": "conceptual_er",
+                "name": schema_name,
                 "strict": True,
                 "schema": schema,
             }
@@ -97,12 +108,12 @@ class LLMGenerator:
             "messages": [
                 {
                     "role": "system",
-                    "content": SYSTEM_PROMPT + "\nContrato JSON:\n" + json.dumps(schema),
+                    "content": instructions + "\nContrato JSON:\n" + json.dumps(schema),
                 },
-                {"role": "user", "content": requirements},
+                {"role": "user", "content": user_input},
             ],
             "response_format": response_format,
-            "timeout": self.settings.timeout,
+            "timeout": self.settings.timeout if timeout is None else timeout,
             "max_tokens": self.settings.max_tokens,
             "num_retries": 0,
             "max_retries": 0,
