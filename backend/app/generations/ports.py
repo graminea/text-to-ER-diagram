@@ -11,7 +11,7 @@ class RuntimeMetadata:
     """Public runtime identity only; never includes provider configuration or secrets."""
 
     provider: str
-    mode: Literal["mock", "llm"]
+    mode: Literal["custom", "llm"]
     model: str | None = None
 
 

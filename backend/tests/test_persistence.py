@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from app.generation import GenerationRequest, GenerationService, GenerationStore
-from app.offline import DEMO_REQUIREMENTS, MockGenerator
 from app.persistence import GenerationRepository
+from tests.support import EXAMPLE_REQUIREMENTS, FixtureGenerator
 
 
 def test_typed_storage_round_trip_survives_restart(tmp_path: Path) -> None:
@@ -10,8 +10,8 @@ def test_typed_storage_round_trip_survives_restart(tmp_path: Path) -> None:
     repository = GenerationRepository(db)
     repository.initialize()
     store: GenerationStore = repository
-    service = GenerationService(MockGenerator(), store)
-    result = service.generate(GenerationRequest(requirements=DEMO_REQUIREMENTS))
+    service = GenerationService(FixtureGenerator(), store)
+    result = service.generate(GenerationRequest(requirements=EXAMPLE_REQUIREMENTS))
 
     restarted = GenerationRepository(db)
     restarted.initialize()

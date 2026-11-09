@@ -6,9 +6,9 @@ import httpx
 import pytest
 
 from app.llm_provider import LLMGenerator
-from app.offline import DEMO_REQUIREMENTS, MockGenerator
 from app.provider_contract import ProviderError
 from app.settings import Settings
+from tests.support import EXAMPLE_REQUIREMENTS, example_schema
 
 
 @pytest.mark.parametrize("status", [200, 401, 429, 500])
@@ -40,7 +40,7 @@ def test_real_sdk_uses_one_http_request_without_leaking_secrets(monkeypatch, cap
                         "finish_reason": "stop",
                         "message": {
                             "role": "assistant",
-                            "content": json.dumps(MockGenerator().generate(DEMO_REQUIREMENTS)),
+                            "content": json.dumps(example_schema()),
                         },
                     }
                 ],
@@ -49,13 +49,13 @@ def test_real_sdk_uses_one_http_request_without_leaking_secrets(monkeypatch, cap
         )
 
     monkeypatch.setattr(httpx.Client, "send", send)
-    adapter = LLMGenerator(Settings(mode="llm", model="openai/gpt-4o-mini", api_key="test-secret"))
+    adapter = LLMGenerator(Settings(model="openai/gpt-4o-mini", api_key="test-secret"))
     if status == 200:
-        result = adapter.generate(DEMO_REQUIREMENTS)
+        result = adapter.generate(EXAMPLE_REQUIREMENTS)
         assert result.input_tokens == 10 and result.output_tokens == 20
     else:
         with pytest.raises(ProviderError) as caught:
-            adapter.generate(DEMO_REQUIREMENTS)
+            adapter.generate(EXAMPLE_REQUIREMENTS)
         assert "test-secret" not in str(caught.value)
     assert len(requests) == 1
     body = json.loads(requests[0].content)
@@ -70,7 +70,7 @@ def test_native_provider_request_and_response_mapping(monkeypatch, provider):
     monkeypatch.setenv("LITELLM_LOCAL_MODEL_COST_MAP", "True")
     monkeypatch.setenv("LITELLM_LOCAL_ANTHROPIC_BETA_HEADERS", "True")
     pytest.importorskip("litellm")
-    payload = json.dumps(MockGenerator().generate(DEMO_REQUIREMENTS))
+    payload = json.dumps(example_schema())
     requests = []
 
     def send(client, request, **kwargs):
@@ -110,8 +110,8 @@ def test_native_provider_request_and_response_mapping(monkeypatch, provider):
         if provider == "gemini"
         else "anthropic/claude-sonnet-4-5-20250929"
     )
-    result = LLMGenerator(Settings(mode="llm", model=model, api_key="test-secret")).generate(
-        DEMO_REQUIREMENTS
+    result = LLMGenerator(Settings(model=model, api_key="test-secret")).generate(
+        EXAMPLE_REQUIREMENTS
     )
     assert json.loads(result.content) == json.loads(payload)
     assert result.input_tokens == 10 and result.output_tokens == 20

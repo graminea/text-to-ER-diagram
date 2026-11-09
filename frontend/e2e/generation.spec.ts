@@ -25,20 +25,3 @@ test("generate, inspect and reload a persisted ER diagram", async ({
   await expect(page.getByText("Estrutura válida")).toBeVisible();
   await expect(page.locator(".react-flow__node-default")).toHaveCount(2);
 });
-
-test("unsupported text is visibly marked as mock output", async ({ page }) => {
-  await page.goto("/");
-  await page
-    .getByLabel("Requisitos do sistema")
-    .fill("Uma biblioteca possui livros e autores.");
-  await Promise.all([
-    page.waitForResponse(
-      (r) =>
-        r.url().endsWith("/api/generations") && r.request().method() === "POST",
-    ),
-    page.getByRole("button", { name: "Gerar diagrama" }).click(),
-  ]);
-  await expect(page.locator(".warning")).toContainText(
-    "não interpreta este texto",
-  );
-});

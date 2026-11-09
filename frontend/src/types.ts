@@ -37,6 +37,6 @@ export type Generation = {
 export type Health = {
   status: string;
   provider: string;
-  mode: 'mock' | 'llm';
+  mode: 'custom' | 'llm';
   model: string | null;
 };

@@ -83,10 +83,6 @@ p {
   gap: 24px;
   align-items: center;
 }
-.mode {
-  font-size: 11px;
-  color: var(--muted);
-}
 .appearance-trigger {
   display: flex;
   align-items: center;
@@ -152,7 +148,7 @@ p {
 .primary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--accent) 88%, var(--on-accent));
 }
-.mock-note {
+.model-note {
   font-size: 11px;
   line-height: 1.7;
   color: var(--muted);

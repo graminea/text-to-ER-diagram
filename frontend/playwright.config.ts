@@ -10,9 +10,9 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+      command: "python -m uvicorn tests.e2e_app:app --host 127.0.0.1 --port 8000",
       cwd: "../backend",
-      env: { MODE: "mock", DB_PATH: "../work/e2e/pilot.db" },
+      env: { DB_PATH: "../work/e2e/direct.db" },
       url: "http://127.0.0.1:8000/api/health",
       reuseExistingServer: false,
     },

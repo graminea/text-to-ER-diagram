@@ -25,7 +25,6 @@ ALLOWED = {
         "app.er.models", "app.er.validation", "app.generations.models", "app.generations.ports",
     },
     "app.generations.adapters.sqlite": {"app.generations.models"},
-    "app.generations.adapters.offline": {"app.er.models"},
     "app.generations.adapters.prompts": set(),
     "app.generations.adapters.llm": {
         "app.er.models", "app.generations.ports", "app.generations.adapters.prompts",
@@ -33,7 +32,7 @@ ALLOWED = {
     },
     "app.settings": set(),
     "app.providers": {
-        "app.generations.ports", "app.settings", "app.generations.adapters.offline",
+        "app.generations.ports", "app.settings",
         "app.generations.adapters.llm",
     },
     "app.bootstrap": {
@@ -52,7 +51,6 @@ ALLOWED = {
     },
     "app.provider_contract": {"app.generations.ports"},
     "app.persistence": {"app.generations.adapters.sqlite"},
-    "app.offline": {"app.generations.adapters.offline"},
     "app.prompts": {"app.generations.adapters.prompts"},
     "app.llm_provider": {"app.generations.adapters.llm"},
 }

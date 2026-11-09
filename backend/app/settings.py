@@ -8,7 +8,6 @@ from urllib.parse import urlsplit
 
 @dataclass(frozen=True)
 class Settings:
-    mode: str = "mock"
     model: str = ""
     api_key: str = field(default="", repr=False)
     api_base: str | None = None
@@ -17,10 +16,8 @@ class Settings:
     output_mode: str = "json_schema"
 
     def __post_init__(self) -> None:
-        if self.mode not in {"mock", "llm"}:
-            raise ValueError("MODE deve ser mock ou llm.")
-        if self.mode == "llm" and (not self.model.strip() or not self.api_key.strip()):
-            raise ValueError("Modo llm exige MODEL e API_KEY.")
+        if not self.model.strip() or not self.api_key.strip():
+            raise ValueError("Configure MODEL e API_KEY para gerar diagramas.")
         if self.model and (len(self.model) > 200 or any(c.isspace() for c in self.model)):
             raise ValueError("MODEL deve ser um identificador de modelo.")
         if not math.isfinite(self.timeout) or not 0 < self.timeout <= 300:
@@ -41,13 +38,14 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
+        if os.getenv("MODE", "llm") != "llm":
+            raise ValueError("Remova MODE e configure MODEL e API_KEY para gerar diagramas.")
         try:
             timeout = float(os.getenv("TIMEOUT", "60"))
             max_tokens = int(os.getenv("MAX_TOKENS", "4096"))
         except ValueError:
             raise ValueError("Timeout e limite de saída devem ser números válidos.") from None
         return cls(
-            mode=os.getenv("MODE", "mock"),
             model=os.getenv("MODEL", ""),
             api_key=os.getenv("API_KEY", ""),
             api_base=os.getenv("API_BASE") or None,

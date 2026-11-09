@@ -37,7 +37,7 @@ def build_application(
 
     An injected generator takes precedence over settings and environment selection.
     Custom generators may declare runtime_metadata or pass it explicitly here.
-    Undescribed generators retain the historical mock-mode health defaults.
+    Injected generators without metadata are reported as custom.
     """
     repository = GenerationRepository(db_path or Path(os.getenv("DB_PATH", "data/pilot.db")))
     selected = (
@@ -47,6 +47,6 @@ def build_application(
         declared = getattr(selected, "runtime_metadata", None)
         runtime_metadata = (
             declared if isinstance(declared, RuntimeMetadata)
-            else RuntimeMetadata(provider=selected.name, mode="mock")
+            else RuntimeMetadata(provider=selected.name, mode="custom")
         )
     return Application(GenerationService(selected, repository), runtime_metadata, repository)
