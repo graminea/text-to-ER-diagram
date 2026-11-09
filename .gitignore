@@ -1,0 +1,67 @@
+# Local secrets and environment overrides; keep safe configuration examples.
+.env
+.env.*
+!.env.example
+!.env.*.example
+.envrc
+work/
+# Private keys and local package/client authentication.
+*.pem
+*.key
+*.p12
+*.pfx
+.netrc
+_netrc
+.npmrc
+.pypirc
+credentials.json
+service-account*.json
+.aws/
+
+# Python environments, caches and packaging outputs.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+
+# JavaScript dependencies, Vite cache and TypeScript build state.
+node_modules/
+.vite/
+*.tsbuildinfo
+
+# Generated test reports and coverage; keep test sources and offline fixtures.
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+coverage.xml
+playwright-report/
+test-results/
+blob-report/
+
+# Local SQLite history may contain user requirements and provider responses.
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+
+# Runtime logs and machine-specific editor/OS files.
+*.log
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local Codex configuration and state.
+.codex/
+.agents/
