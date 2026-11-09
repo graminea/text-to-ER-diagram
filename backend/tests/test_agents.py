@@ -50,6 +50,7 @@ def test_agent_flow_revises_draft_and_saves_only_the_final_model(monkeypatch, tm
         assert body["flow"] == "B" and body["call_count"] == 4
         assert body["prompt_version"] == "er-agents-v1"
         assert body["input_tokens"] == 480 and body["output_tokens"] == 320
+        assert body["specialist_findings"] == findings
         assert client.get("/api/generations").json() == [body]
         assert client.get(f"/api/generations/{body['id']}").json() == body
     assert len(requests) == 4

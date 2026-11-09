@@ -28,7 +28,7 @@ ALLOWED = {
     "app.generations.adapters.prompts": set(),
     "app.generations.adapters.agents": {
         "app.er.models", "app.generations.adapters.llm", "app.generations.adapters.prompts",
-        "app.generations.ports",
+        "app.generations.models", "app.generations.ports",
     },
     "app.generations.adapters.llm": {
         "app.er.models", "app.generations.ports", "app.generations.adapters.prompts",
@@ -62,7 +62,6 @@ EXTERNAL = {
     "app.er.models": {"pydantic"},
     "app.generations.models": {"pydantic"},
     "app.generations.service": {"pydantic"},
-    "app.generations.adapters.agents": {"pydantic"},
     "app.generations.adapters.llm": {"litellm"},
     "app.entrypoints.http": {"fastapi"},
 }

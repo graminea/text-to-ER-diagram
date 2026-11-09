@@ -6,14 +6,13 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from importlib.resources import files
 from time import monotonic
-from typing import Annotated, cast
+from typing import cast
 from uuid import uuid4
-
-from pydantic import Field, StringConstraints
 
 from app.er.models import ConceptualSchema, Contract
 from app.generations.adapters.llm import LLMGenerator
 from app.generations.adapters.prompts import SYSTEM_PROMPT
+from app.generations.models import FindingList, SpecialistFindings
 from app.generations.ports import ProviderError, ProviderOutput
 
 PROMPT_VERSION = "er-agents-v1"
@@ -28,9 +27,7 @@ Escreva no idioma dos requisitos. Não gere um novo modelo nem SQL.
 
 
 class Review(Contract):
-    findings: list[Annotated[str, StringConstraints(min_length=1, max_length=600)]] = Field(
-        max_length=8
-    )
+    findings: FindingList
 
 
 def total_tokens(counts: list[int | None]) -> int | None:
@@ -110,9 +107,12 @@ class AgentGenerator:
             consistency_output, consistency_findings = consistency.result()
             cardinality_output, cardinality_findings = cardinality.result()
 
+        findings = SpecialistFindings(
+            consistency=consistency_findings, cardinality=cardinality_findings,
+        )
         final_input = {
             **context,
-            "reviews": {"consistency": consistency_findings, "cardinality": cardinality_findings},
+            "reviews": findings.model_dump(),
         }
         final = complete(
             "coordinator.final",
@@ -127,4 +127,5 @@ class AgentGenerator:
             input_tokens=total_tokens([call.input_tokens for call in calls]),
             output_tokens=total_tokens([call.output_tokens for call in calls]),
             call_count=len(calls),
+            specialist_findings=findings,
         )

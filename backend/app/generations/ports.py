@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
-from app.generations.models import Generation
+from app.generations.models import Generation, SpecialistFindings
 
 
 @dataclass(frozen=True)
@@ -24,6 +24,7 @@ class ProviderOutput:
     output_tokens: int | None = None
     call_count: int = 1
     output_mode: str | None = None
+    specialist_findings: SpecialistFindings | None = None
 
 
 class SchemaGenerator(Protocol):
