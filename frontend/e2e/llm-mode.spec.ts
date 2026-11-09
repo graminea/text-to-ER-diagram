@@ -29,6 +29,7 @@ test("presents model and usage alongside the validated diagram", async ({ page }
   await expect(page.getByText("Estrutura válida")).toBeVisible();
   await expect(page.locator(".entity-title")).toHaveCount(2);
   await page.getByText("Decisões e validação").click();
+  await expect(page.getByRole("heading", { name: "Pareceres sobre o rascunho" })).toHaveCount(0);
   await expect(page.locator(".provider-info")).toContainText("openai/test");
   await expect(page.locator(".provider-info")).toContainText("120 tokens de entrada");
   await expect(page.locator(".provider-info")).toContainText("80 tokens de saída");
@@ -50,6 +51,9 @@ test("selects agent review and shows combined token usage", async ({ page }) => 
   await expect(page.locator(".entity-title")).toHaveCount(2);
   await page.screenshot({ path: "test-results/agent-generation.png", fullPage: true });
   await page.getByText("Decisões e validação").click();
+  await expect(page.getByRole("heading", { name: "Pareceres sobre o rascunho" })).toBeVisible();
+  await expect(page.getByText("Cliente e Pedido aparecem nos requisitos.")).toBeVisible();
+  await expect(page.getByText("Cada pedido pertence a um cliente.", { exact: true })).toBeVisible();
   await expect(page.locator(".provider-info")).toContainText("Com agentes");
   await expect(page.locator(".provider-info")).toContainText("480 tokens de entrada");
   await expect(page.locator(".provider-info")).toContainText("320 tokens de saída");

@@ -1,5 +1,7 @@
 """Browser test entry point with a credential-free provider transport."""
 
+import json
+
 from app.entrypoints.http import create_app
 from app.generations.adapters.agents import AgentGenerator
 from app.llm_provider import LLMGenerator
@@ -9,7 +11,13 @@ from tests.support import response
 
 def complete(**request):
     if request["response_format"]["json_schema"]["name"] == "er_review":
-        return response('{"findings":[]}')
+        instructions = request["messages"][0]["content"]
+        finding = (
+            "Cada pedido pertence a um cliente."
+            if "limites mínimo e máximo" in instructions
+            else "Cliente e Pedido aparecem nos requisitos."
+        )
+        return response(json.dumps({"findings": [finding]}))
     return response()
 
 

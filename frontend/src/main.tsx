@@ -237,6 +237,28 @@ function App() {
                       ))}
                     </div>
                   )}
+                  {result.specialist_findings && (
+                    <div className="decision-group specialist-findings">
+                      <h3>Pareceres sobre o rascunho</h3>
+                      <dl>
+                        {([
+                          ["Coerência", result.specialist_findings.consistency],
+                          ["Cardinalidade", result.specialist_findings.cardinality],
+                        ] as const).map(([role, findings]) => (
+                          <div key={role}>
+                            <dt>{role}</dt>
+                            <dd>
+                              {findings.length ? (
+                                <ul>
+                                  {findings.map((finding, i) => <li key={i}>{finding}</li>)}
+                                </ul>
+                              ) : "Nenhum achado."}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  )}
                   <details className="json-view">
                     <summary>Ver JSON canônico</summary>
                     <pre>{JSON.stringify(result.schema_model, null, 2)}</pre>

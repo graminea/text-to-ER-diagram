@@ -324,6 +324,23 @@ summary:hover {
   font-weight: 500;
   margin-bottom: 6px;
 }
+.specialist-findings dl,
+.specialist-findings dd,
+.specialist-findings ul {
+  margin: 0;
+}
+.specialist-findings dl > div + div {
+  margin-top: 8px;
+}
+.specialist-findings dt {
+  color: var(--muted);
+}
+.specialist-findings dd {
+  overflow-wrap: anywhere;
+}
+.specialist-findings ul {
+  padding-inline-start: 18px;
+}
 .json-view {
   margin-top: 16px;
 }
